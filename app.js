@@ -412,18 +412,11 @@ function shareLastTicketWhatsApp() {
     const sale = JSON.parse(container.dataset.lastSale);
     const canvas = document.getElementById('flyer-canvas');
 
-    const estado = sale.paid >= sale.price ? '✅ PAGADO' : (sale.paid > 0 ? `🟡 ABONADO parcial ($${sale.paid})` : '❌ IMPAGO');
     const text = `🎫 *TARJETA ASIGNADA* 🎫\n` +
                  `----------------------------------------\n` +
                  `*Evento:* ${activeEvent.name}\n` +
                  `*Número:* #${String(sale.number).padStart(3, '0')}\n` +
-                 `*Producto:* ${sale.productName}\n` +
-                 `*Comprador:* ${sale.buyer}\n` +
-                 `*Vendedor:* ${sale.seller}\n` +
-                 `*Precio:* $${sale.price}\n` +
-                 `*Abonado:* $${sale.paid}\n` +
-                 `*Estado:* ${estado}\n` +
-                 `----------------------------------------`;
+                 `*Producto:* ${sale.productName}`;
 
     // Attempt native file sharing if supported (e.g. mobile Chrome/Safari share sheet)
     if (canvas && navigator.canShare && navigator.share) {
