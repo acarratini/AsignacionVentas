@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asignación de Ventas de Eventos</title>
+    <!-- Google Fonts Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="no-print">
+        <h1 id="app-title">Asignación Ventas</h1>
+        <span id="active-event-badge" class="event-status-badge">Cargando...</span>
+    </header>
+
+    <main>
+        <!-- VIEW 1: SALES FORM & TICKET PREVIEW -->
+        <div id="view-vender" class="view-panel active">
+            <div class="card event-active-only">
+                <h2>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                    Nueva Venta
+                </h2>
+                <form id="sales-form">
+                    <div class="form-group">
+                        <label for="sale-product">Producto / Variedad</label>
+                        <select id="sale-product" required>
+                            <!-- Dynamically populated -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sale-buyer">Nombre Comprador (Opcional)</label>
+                        <input type="text" id="sale-buyer" placeholder="Ej: Juan Pérez (Dejar en blanco para venta rápida)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sale-seller">Vendido Por (Opcional)</label>
+                        <input type="text" id="sale-seller" placeholder="Ej: María Gómez">
+                    </div>
+
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label for="sale-price">Precio Total ($)</label>
+                            <input type="number" id="sale-price" readonly value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="sale-paid">Abonado ($)</label>
+                            <input type="number" id="sale-paid" min="0" placeholder="Ej: 0">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        Registrar y Asignar Número
+                    </button>
+                </form>
+            </div>
+
+            <!-- Warning if no active event -->
+            <div id="no-active-event-warning" class="card" style="display: none; text-align: center; border-color: var(--danger);">
+                <h2 style="justify-content: center; color: #fca5a5;">No hay evento activo</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Para poder registrar ventas, primero debes crear o activar un evento.</p>
+                <button onclick="switchView('eventos')" class="btn btn-primary">Ir a Gestión de Eventos</button>
+            </div>
+
+            <!-- Last Ticket Generated -->
+            <div id="last-ticket-container" class="ticket-wrapper" style="display: none;">
+                <h2 style="margin-left: 10px; margin-bottom: 12px;">Tarjeta / Flyer Generado</h2>
+                <div style="display: flex; justify-content: center; margin-bottom: 16px;">
+                    <canvas id="flyer-canvas" width="600" height="600" style="width: 100%; max-width: 400px; height: auto; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); aspect-ratio: 1; display: block;"></canvas>
+                </div>
+                <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                    <button id="btn-share-whatsapp" class="btn btn-success">
+                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.19-1.354a9.95 9.95 0 004.82 1.233h.005c5.507 0 9.99-4.478 9.99-9.984A9.988 9.988 0 0012.012 2zm5.727 14.157c-.249.704-1.25 1.288-1.72 1.348-.47.06-1.077.106-3.155-.754-2.659-1.102-4.323-3.805-4.456-3.98-.13-.176-1.077-1.432-1.077-2.733 0-1.3.682-1.94.925-2.203.242-.262.532-.328.71-.328.176 0 .352.002.505.01.159.008.373-.06.584.446.216.52.74 1.802.805 1.933.065.13.11.282.022.457-.087.176-.132.28-.263.433-.131.152-.275.34-.393.456-.131.132-.269.276-.117.537.152.261.678 1.118 1.455 1.81.996.89 1.833 1.166 2.091 1.297.26.132.408.11.56-.065.152-.175.656-.763.83-1.025.174-.262.348-.219.585-.131.239.088 1.517.714 1.777.844.262.13.436.196.5.309.066.113.066.655-.183 1.359z"/></svg>
+                        WhatsApp
+                    </button>
+                    <button id="btn-download-flyer" class="btn btn-primary">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Descargar
+                    </button>
+                </div>
+                <button id="btn-delete-last" class="btn btn-secondary" style="width: 100%;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Eliminar Venta
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 2: SALES SHEET (PLANILLA) -->
+        <div id="view-planilla" class="view-panel">
+            <div class="stats-grid no-print">
+                <div class="stat-card">
+                    <div class="stat-label">Vendidos</div>
+                    <div id="stat-total-qty" class="stat-value">0</div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid var(--success);">
+                    <div class="stat-label">Abonado</div>
+                    <div id="stat-total-paid" class="stat-value">$0</div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid var(--warning);">
+                    <div class="stat-label">Pendiente</div>
+                    <div id="stat-total-pending" class="stat-value">$0</div>
+                </div>
+            </div>
+
+            <div class="card print-visible" id="product-summary-card">
+                <h2>Resumen para Compra y Preparación</h2>
+                <div id="product-summary-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+                    <!-- Dynamic product totals -->
+                </div>
+            </div>
+
+            <div class="card print-visible">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;" class="no-print">
+                    <h2>Planilla de Ventas</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="window.print()" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.85rem;">
+                            Imprimir
+                        </button>
+                        <button id="btn-export-excel" class="btn btn-success" style="padding: 8px 12px; font-size: 0.85rem;">
+                            Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group no-print">
+                    <input type="text" id="search-filter" placeholder="🔍 Buscar por N°, Comprador, Vendedor o Producto...">
+                </div>
+
+                <div class="table-container">
+                    <table id="sales-table">
+                        <thead>
+                            <tr>
+                                <th>N°</th>
+                                <th>Producto</th>
+                                <th>Comprador</th>
+                                <th>Vendedor</th>
+                                <th>Abono</th>
+                                <th class="no-print">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: EVENTS GESTION -->
+        <div id="view-eventos" class="view-panel">
+            <!-- Create Event Card -->
+            <div class="card" id="create-event-container">
+                <h2>Crear Nuevo Evento</h2>
+                <form id="event-form">
+                    <div class="form-group">
+                        <label for="event-name">Nombre del Evento</label>
+                        <input type="text" id="event-name" required placeholder="Ej: Venta de Pastelitos Junio">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Evento / Productos</label>
+                        <select id="event-preset-select" class="form-control">
+                            <option value="pastelitos">Pastelitos (1 Docena / Media Docena de Batata / Membrillo)</option>
+                            <option value="custom">Personalizado (Definir productos manualmente)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="event-image">Imagen de Fondo del Flyer (Opcional)</label>
+                        <input type="file" id="event-image" accept="image/*" class="form-control">
+                    </div>
+
+                    <!-- Custom Products setup (initially hidden) -->
+                    <div id="custom-products-container" class="form-group" style="display: none;">
+                        <label>Productos (Nombre | Precio)</label>
+                        <div id="custom-products-list">
+                            <!-- Will dynamically have input rows -->
+                        </div>
+                        <button type="button" id="btn-add-custom-product" class="btn btn-secondary" style="margin-top: 10px; padding: 6px 12px; font-size: 0.85rem;">
+                            + Agregar Producto
+                        </button>
+                    </div>
+
+                    <button type="submit" class="btn btn-success" style="margin-top: 10px;">
+                        Iniciar Evento
+                    </button>
+                </form>
+            </div>
+
+            <!-- Active Event Control Card -->
+            <div class="card" id="active-event-controls" style="display: none;">
+                <h2>Evento Activo</h2>
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="font-weight: 700; font-size: 1.1rem;" id="active-event-display-name">-</div>
+                    <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;" id="active-event-display-date">-</div>
+                </div>
+
+                <div class="form-group">
+                    <p style="font-size: 0.85rem; color: #fca5a5; margin-bottom: 12px;">
+                        <strong>⚠️ Cerrar Evento:</strong> Una vez finalizado el evento, no se podrán registrar nuevas ventas, quedando listo para iniciar uno nuevo.
+                    </p>
+                    <button id="btn-close-event" class="btn btn-danger">
+                        Cerrar Evento Definitivamente
+                    </button>
+                    <button id="btn-edit-event" class="btn btn-secondary" style="margin-top: 10px;">
+                        Editar Configuración de Evento
+                    </button>
+                </div>
+            </div>
+
+            <!-- Event History List -->
+            <div class="card">
+                <h2>Historial de Eventos</h2>
+                <div id="events-history-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav no-print">
+        <button class="nav-item active" onclick="switchView('vender')">
+            <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            Vender
+        </button>
+        <button class="nav-item" onclick="switchView('planilla')">
+            <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Planilla
+        </button>
+        <button class="nav-item" onclick="switchView('eventos')">
+            <svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+            Eventos
+        </button>
+    </nav>
+
+    <!-- Modal: Edit Sale -->
+    <div id="modal-edit-sale" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Editar Venta</h2>
+            <form id="edit-sale-form">
+                <input type="hidden" id="edit-sale-number">
+                <div class="form-group">
+                    <label for="edit-sale-product">Producto / Variedad</label>
+                    <select id="edit-sale-product" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-sale-buyer">Comprador</label>
+                    <input type="text" id="edit-sale-buyer">
+                </div>
+                <div class="form-group">
+                    <label for="edit-sale-seller">Vendedor</label>
+                    <input type="text" id="edit-sale-seller">
+                </div>
+                <div class="row-2">
+                    <div class="form-group">
+                        <label for="edit-sale-price">Precio ($)</label>
+                        <input type="number" id="edit-sale-price" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sale-paid">Abonado ($)</label>
+                        <input type="number" id="edit-sale-paid" min="0" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-sale')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Event Config -->
+    <div id="modal-edit-event" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 style="margin-bottom: 20px;">Editar Configuración del Evento</h2>
+            <form id="edit-event-form">
+                <div class="form-group">
+                    <label for="edit-event-name">Nombre del Evento</label>
+                    <input type="text" id="edit-event-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-event-image">Imagen de Fondo del Flyer (Opcional - Reemplazar)</label>
+                    <input type="file" id="edit-event-image" accept="image/*" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Productos y Precios</label>
+                    <div id="edit-event-products-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Dynamically populated rows of products -->
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-event')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
